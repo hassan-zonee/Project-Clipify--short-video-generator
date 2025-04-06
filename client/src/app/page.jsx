@@ -1,4 +1,28 @@
+'use client';
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
 export default function Home() {
+  const [responseMessage, setResponseMessage] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    let video_url = e.target.VideoUrl.value;
+    console.log(video_url);
+    try {
+      const response = await axios.post('http://localhost:8000/api/process-video/', {
+        url: video_url
+      });
+
+      setResponseMessage(response.data.message);  // Display backend message
+    } catch (error) {
+      setResponseMessage('Error processing video. Make sure the link is correct!');
+    }
+  };
+
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white flex items-center justify-center px-4">
       <div className="max-w-2xl w-full text-center space-y-8">
@@ -9,8 +33,9 @@ export default function Home() {
           Paste a YouTube or video link, and we’ll auto-generate short, viral-worthy clips for TikTok, Reels, and more.
         </p>
 
-        <form className="flex flex-col sm:flex-row items-center gap-4 mt-6">
+        <form className="flex flex-col sm:flex-row items-center gap-4 mt-6" onSubmit={handleSubmit}>
           <input
+            name='VideoUrl'
             type="url"
             placeholder="Enter YouTube/video link..."
             className="w-full p-3 rounded-lg text-grey-200 placeholder-gray-400 ring-2 ring-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -22,6 +47,8 @@ export default function Home() {
             Clipify
           </button>
         </form>
+
+        {responseMessage && <p>{responseMessage}</p>}
       </div>
     </main>
   );
