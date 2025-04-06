@@ -10,13 +10,13 @@ export default function Home() {
     e.preventDefault();
     
     let video_url = e.target.VideoUrl.value;
-    console.log(video_url);
     try {
-      const response = await axios.post('http://localhost:8000/api/process-video/', {
+      const response = await axios.post('http://localhost:8000/api/generate-clips/', {
         url: video_url
       });
 
-      setResponseMessage(response.data.message);  // Display backend message
+      console.log(response.data.clips[0].thumbnail)
+      setResponseMessage(response.data.clips[0].thumbnail);  // Display backend message
     } catch (error) {
       setResponseMessage('Error processing video. Make sure the link is correct!');
     }

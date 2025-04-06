@@ -2,5 +2,5 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('process-video/', views.process_video),
+    path('generate-clips/', views.generate_clips),
 ]
