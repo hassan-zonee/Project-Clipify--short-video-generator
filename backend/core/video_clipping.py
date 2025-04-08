@@ -19,7 +19,7 @@ def generate_video_clips(video_path, audio_path):
         clip_paths = []
         segments = extract_emotion_segments(audio_path)
         print(f"🎯 Total segments found: {len(segments)}")
-        segments = segments[2:(min(7, len(segments)))]
+        segments = segments[: min(7, len(segments)-1)]
         
         for i, (start, end) in enumerate(segments):
             print(f"Segment {i+1}: Start={start}s, End={end}s, Duration={end - start}s")
@@ -55,7 +55,7 @@ def extract_emotion_segments(audio_path, threshold=.5, duration=30):
     # Normalize energy
     energy = (energy - np.min(energy)) / (np.max(energy) - np.min(energy))
     
-    clip_duration = random.randint(duration/2, duration)
+    clip_duration = random.randint(duration-10, duration)
     # Identify high-energy segments
     high_energy_times = []
     for i, val in enumerate(energy):
