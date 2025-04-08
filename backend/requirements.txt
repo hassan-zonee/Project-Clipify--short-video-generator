@@ -1,8 +1,16 @@
 django
 djangorestframework
 django-cors-headers
+numpy 
+scipy
 moviepy 
 requests
 ffmpeg
 vosk
 librosa
+
+
+pyAudioAnalysis
+matplotlib
+eyed3
+pydub

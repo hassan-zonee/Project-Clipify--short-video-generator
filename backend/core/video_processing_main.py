@@ -7,20 +7,18 @@ from . import constants
 
 
 def process_video(url):
-    #downloaded_video = download_video(url)
-    #extracted_audio = video_clipping.extract_audio(video_path, generate_unique_filename(temp_path, '.wav'))
+    downloaded_video = download_video(url)
+    extracted_audio = video_clipping.extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
+    clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
+    #transcription = video_clipping.transcribe_audio(extracted_audio)
     
-    downloaded_video = constants.video_download_path + "/20250408_183601_c20b36ba-5e9d-416f-8049-c597984996dd.mp4"
-    extracted_audio = constants.temp_path + '/20250408_190306_6329673e-3c28-49df-8273-e4492e548376.wav'
-    
-    transcription = video_clipping.transcribe_audio(extracted_audio)
-    return transcription
+    return "results"
 
 
 
 def download_video(url: str):
     print('downloading...')
-    output_path = generate_unique_filename(constants.video_download_path, extension=".mp4")
+    output_path = utils.generate_unique_filename(constants.video_download_path, extension=".mp4")
     ydl_opts = {
         'format': 'bestvideo[height<=480]+bestaudio/best',
         'outtmpl': output_path,
