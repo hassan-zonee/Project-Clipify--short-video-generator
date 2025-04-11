@@ -12,7 +12,7 @@ import string as str
 
 def process_video(url):
     downloaded_video = download_video(url)
-    extracted_audio = video_clipping.extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
+    extracted_audio = extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
     clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
     
     for clip in clips:
