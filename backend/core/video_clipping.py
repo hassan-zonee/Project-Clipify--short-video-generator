@@ -3,11 +3,8 @@ import numpy as np
 import librosa
 import soundfile as sf
 from moviepy import VideoFileClip
-from vosk import Model, KaldiRecognizer
 from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import MidTermFeatures
-import wave
-import json
 from . import utils, constants
 
 
@@ -78,41 +75,6 @@ def extract_key_segments(audio_path, threshold=.3, duration=30):
     return time_segments
 
 
-
-
-def transcribe_audio(audio_path, model_path="././vosk-model-small-en-us-0.15"):
-    wf = wave.open(audio_path, "rb")
-    
-    if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getframerate() != 16000:
-        raise ValueError("Audio must be WAV format: mono, 16-bit, 16kHz")
-
-    # Load model
-    model = Model(model_path)
-    recognizer = KaldiRecognizer(model, wf.getframerate())
-    recognizer.SetWords(True)
-
-    results = []
-
-    while True:
-        data = wf.readframes(4000)
-        if len(data) == 0:
-            break
-        if recognizer.AcceptWaveform(data):
-            result = json.loads(recognizer.Result())
-            results.append(result)
-
-    final_result = json.loads(recognizer.FinalResult())
-    results.append(final_result)
-    
-    wf.close()
-    
-    temp_json_path = utils.generate_unique_filename(constants.temp_path, '.json')
-    with open(temp_json_path, "w") as json_file:
-        json.dump(results, json_file, indent=4)
-
-    utils.delete_file(audio_path)
-    
-    return temp_json_path
 
 
 

@@ -10,20 +10,6 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(predictor_path)
 
 
-def get_processed_video(input_video_path, output_video_path):
-    reframed_video_path = utils.generate_unique_filename(constants.temp_path, '.mp4')
-    reframed_video = reframe_video(input_video_path, reframed_video_path)
-    
-    extracted_audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
-    extracted_audio = video_processing_main.extract_audio(input_video_path, extracted_audio_path)
-    
-    video_processing_main.merge_audio_with_video(reframed_video_path, extracted_audio_path, output_video_path)
-    
-    utils.delete_file(reframed_video)
-    utils.delete_file(extracted_audio)
-    
-    return output_video_path
-
 
 def reframe_video(input_video_path, output_video_path):
     
@@ -41,7 +27,7 @@ def reframe_video(input_video_path, output_video_path):
     last_speaker_face = None
 
     speaker_history = deque(maxlen=10)
-    center_history = deque(maxlen=15) 
+    center_history = deque(maxlen=10) 
     frame_counter = 0
 
     while True:

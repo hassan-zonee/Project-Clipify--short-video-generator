@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime
+import random
 
 def delete_file(file_path: str):
     if os.path.exists(file_path):
@@ -17,3 +18,36 @@ def generate_unique_filename(path, extension=".mp4"):
     file_path = os.path.join(path, filename)
 
     return file_path
+
+
+def create_subtitle_chunks(vosk_results, words=3, max_duration=4.0):
+    subtitles = []
+    chunk = []
+    start_time = None
+
+    for res in vosk_results:
+        if 'result' not in res:
+            continue
+        for word in res['result']:
+            if not chunk:
+                start_time = word['start']
+            chunk.append(word)
+            duration = word['end'] - start_time
+            max_words = random.randint(words//2, words)
+            if len(chunk) >= max_words or duration >= max_duration:
+                text = " ".join([w['word'] for w in chunk])
+                subtitles.append({
+                    "start": chunk[0]['start'],
+                    "end": chunk[-1]['end'],
+                    "text": text
+                })
+                chunk = []
+    # Handle last chunk
+    if chunk:
+        text = " ".join([w['word'] for w in chunk])
+        subtitles.append({
+            "start": chunk[0]['start'],
+            "end": chunk[-1]['end'],
+            "text": text
+        })
+    return subtitles
