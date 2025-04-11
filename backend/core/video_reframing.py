@@ -78,22 +78,7 @@ def reframe_video(input_video_path, output_video_path):
             if count >= 5:  # consistency percent
                 for f in speaker_history:
                     if (f.left(), f.top(), f.right(), f.bottom()) == most_common_face:
-                        # 🟡 Check if speaker has changed
-                        new_speaker_face = f
-                        if last_speaker_face is None or (
-                            last_speaker_face.left() != new_speaker_face.left() or
-                            last_speaker_face.top() != new_speaker_face.top() or
-                            last_speaker_face.right() != new_speaker_face.right() or
-                            last_speaker_face.bottom() != new_speaker_face.bottom()
-                        ):
-                            # 🟢 Speaker changed → clear smoothing history
-                            center_history.clear()
-                            x, y, w, h = (new_speaker_face.left(), new_speaker_face.top(),
-                                        new_speaker_face.width(), new_speaker_face.height())
-                            face_center = (x + w // 2, y + h // 2)
-                            center_history.append(face_center)
-
-                        last_speaker_face = new_speaker_face
+                        last_speaker_face = f
                         break
 
         if last_speaker_face:
