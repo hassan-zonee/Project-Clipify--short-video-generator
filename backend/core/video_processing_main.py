@@ -11,31 +11,33 @@ import string as str
 
 
 def process_video(url):
-    #downloaded_video = download_video(url)
-    #extracted_audio = video_clipping.extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
-    #clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
-    #transcription = video_clipping.transcribe_audio(extracted_audio)
+    downloaded_video = download_video(url)
+    extracted_audio = video_clipping.extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
+    clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
     
-    
-    input_video_path = constants.temp_path + "/test2.mp4"
-    output_video_path = utils.generate_unique_filename(constants.generated_clips_path, '.mp4')
-    
-    # reframe video
-    reframed_video = video_reframing.reframe_video(input_video_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
-    
-    # extract audio
-    audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
-    extract_audio(input_video_path, audio_path)
-    
-    # generate subtitles
-    subtitles = utils.create_subtitle_chunks(transcribe_audio(audio_path))
-    
-    # add subtitles
-    
-    add_subtitles_to_video(reframed_video, subtitles, output_video_path)
-    
-    utils.delete_file(audio_path)
-    utils.delete_file(reframed_video)
+    for clip in clips:
+        input_video_path = clip
+        output_video_path = utils.generate_unique_filename(constants.generated_clips_path, '.mp4')
+        
+        # reframe video
+        reframed_video = video_reframing.reframe_video(input_video_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
+        
+        # extract audio
+        audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
+        extract_audio(input_video_path, audio_path)
+        
+        # generate subtitles
+        subtitles = utils.create_subtitle_chunks(transcribe_audio(audio_path))
+        
+        #merge audio to reframed video
+        audio_video_merge_path = merge_audio_with_video(reframed_video, audio_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
+        
+        # add subtitles
+        add_subtitles_to_video(audio_video_merge_path, subtitles, output_video_path)
+        
+        utils.delete_file(audio_path)
+        utils.delete_file(audio_video_merge_path)
+        utils.delete_file(reframed_video)
     
     
     
