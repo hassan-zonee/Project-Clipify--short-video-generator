@@ -15,7 +15,7 @@ def generate_video_clips(video_path, audio_path):
         clip_paths = []
         segments = extract_key_segments(audio_path)
         print(f"🎯 Total segments found: {len(segments)}")
-        segments = segments[: min(7, len(segments))]
+        segments = segments[: min(20, len(segments))]
         
         for i, (start, end) in enumerate(segments):
             print(f"Segment {i+1}: Start={start}s, End={end}s, Duration={end - start}s")
