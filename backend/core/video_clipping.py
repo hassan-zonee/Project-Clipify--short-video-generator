@@ -25,7 +25,7 @@ def generate_video_clips(video_path, audio_path):
         
         
         for i, (start, end) in enumerate(segments):
-            filename = utils.generate_unique_filename(constants.generated_clips_path, '.mp4')
+            filename = utils.generate_unique_filename(constants.temp_path, '.mp4')
             subclip = video.subclipped(start, min(end, video.duration))
             subclip.write_videofile(filename, codec="libx264", audio_codec="aac")
             clip_paths.append(filename)
@@ -54,10 +54,10 @@ def extract_key_segments(audio_path, threshold=.3, duration=30):
     # Normalize energy
     energy = (energy - np.min(energy)) / (np.max(energy) - np.min(energy))
     
-    clip_duration = random.randint(duration-10, duration)
     # Identify high-energy segments
     high_energy_times = []
     for i, val in enumerate(energy):
+        clip_duration = random.randint(duration-10, duration)
         if val >= threshold:
             start = i
             end = i + int(clip_duration / 1)  # step is 1 sec
@@ -115,14 +115,4 @@ def transcribe_audio(audio_path, model_path="././vosk-model-small-en-us-0.15"):
     return temp_json_path
 
 
-def extract_audio(video_path, output_audio_path):
-    video = VideoFileClip(video_path)
-    audio = video.audio
-    audio.write_audiofile(output_audio_path, fps=16000, codec='pcm_s16le')
-    
-    audio, sr = librosa.load(output_audio_path, sr=16000, mono=True)
-    sf.write(output_audio_path, audio, sr)
-    
-    video.close()
-    
-    return output_audio_path
+

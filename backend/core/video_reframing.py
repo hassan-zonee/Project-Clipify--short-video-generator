@@ -2,6 +2,7 @@ import cv2
 import dlib
 import numpy as np
 from collections import deque, Counter
+from . import constants, video_processing_main, utils
 
 
 predictor_path = "././shape_predictor_68_face_landmarks.dat"
@@ -9,10 +10,24 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(predictor_path)
 
 
-def euclidean_distance(p1, p2):
-    return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+def get_processed_video(input_video_path, output_video_path):
+    reframed_video_path = utils.generate_unique_filename(constants.temp_path, '.mp4')
+    reframed_video = reframe_video(input_video_path, reframed_video_path)
+    
+    extracted_audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
+    extracted_audio = video_processing_main.extract_audio(input_video_path, extracted_audio_path)
+    
+    video_processing_main.merge_audio_with_video(reframed_video_path, extracted_audio_path, output_video_path)
+    
+    utils.delete_file(reframed_video)
+    utils.delete_file(extracted_audio)
+    
+    return output_video_path
+
 
 def reframe_video(input_video_path, output_video_path):
+    
+    print("Reframing started!")
 
     cap = cv2.VideoCapture(input_video_path)
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -25,7 +40,7 @@ def reframe_video(input_video_path, output_video_path):
 
     last_speaker_face = None
 
-    speaker_history = deque(maxlen=7)
+    speaker_history = deque(maxlen=10)
     center_history = deque(maxlen=15) 
     frame_counter = 0
 
@@ -60,10 +75,25 @@ def reframe_video(input_video_path, output_video_path):
             face_counts = Counter([(f.left(), f.top(), f.right(), f.bottom()) for f in speaker_history])
             most_common_face, count = face_counts.most_common(1)[0]
 
-            if count >= 3:  # consistency percent
+            if count >= 5:  # consistency percent
                 for f in speaker_history:
                     if (f.left(), f.top(), f.right(), f.bottom()) == most_common_face:
-                        last_speaker_face = f
+                        # 🟡 Check if speaker has changed
+                        new_speaker_face = f
+                        if last_speaker_face is None or (
+                            last_speaker_face.left() != new_speaker_face.left() or
+                            last_speaker_face.top() != new_speaker_face.top() or
+                            last_speaker_face.right() != new_speaker_face.right() or
+                            last_speaker_face.bottom() != new_speaker_face.bottom()
+                        ):
+                            # 🟢 Speaker changed → clear smoothing history
+                            center_history.clear()
+                            x, y, w, h = (new_speaker_face.left(), new_speaker_face.top(),
+                                        new_speaker_face.width(), new_speaker_face.height())
+                            face_center = (x + w // 2, y + h // 2)
+                            center_history.append(face_center)
+
+                        last_speaker_face = new_speaker_face
                         break
 
         if last_speaker_face:
@@ -100,5 +130,10 @@ def reframe_video(input_video_path, output_video_path):
     cap.release()
     out.release()
     cv2.destroyAllWindows()
+    print("Reframing completed!")
     
-    print("Processing completed!")
+    return output_video_path
+
+
+def euclidean_distance(p1, p2):
+    return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
