@@ -21,7 +21,7 @@ def process_video(url):
     output_video_path = utils.generate_unique_filename(constants.generated_clips_path, '.mp4')
     
     # reframe video
-    reframed_video = video_reframing.reframe_video(input_video_path, output_video_path)
+    reframed_video = video_reframing.reframe_video(input_video_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
     
     # extract audio
     audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
