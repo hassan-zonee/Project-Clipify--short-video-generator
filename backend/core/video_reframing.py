@@ -1,43 +1,104 @@
 import cv2
-import face_alignment
-import torch
+import dlib
 import numpy as np
+from collections import deque, Counter
 
-def reframe_video(input_path, output_path):
-    # Load face-alignment with landmarks type 2D
-    fa = face_alignment.FaceAlignment(face_alignment.LandmarksType.TWO_D, device='cpu')
 
-    print("✅ Model Downloaded...")
-    cap = cv2.VideoCapture(input_path)
-    if not cap.isOpened():
-        print("❌ Failed to open video.")
-        return
+predictor_path = "././shape_predictor_68_face_landmarks.dat"
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor(predictor_path)
 
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
 
-    out = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+def euclidean_distance(p1, p2):
+    return np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
-    frame_count = 0
+def reframe_video(input_video_path, output_video_path):
+
+    cap = cv2.VideoCapture(input_video_path)
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+    output_width = frame_height * 9 // 16
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_video_path, fourcc, fps, (output_width, frame_height))
+
+    last_speaker_face = None
+
+    speaker_history = deque(maxlen=7)
+    center_history = deque(maxlen=15) 
+    frame_counter = 0
+
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        preds = fa.get_landmarks(frame)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = detector(gray)
 
-        if preds is not None:
-            for face_landmarks in preds:
-                for (x, y) in face_landmarks:
-                    cv2.circle(frame, (int(x), int(y)), 1, (0, 255, 0), -1)
+        speaking_face = None
+        current_max_lip_distance = 0
 
-        out.write(frame)
-        frame_count += 1
-        if frame_count % 30 == 0:
-            print(f"Processed {frame_count} frames...")
+        for face in faces:
+            landmarks = predictor(gray, face)
+            top_lip = landmarks.parts()[48]
+            bottom_lip = landmarks.parts()[54]
+
+            lip_distance = euclidean_distance((top_lip.x, top_lip.y), (bottom_lip.x, bottom_lip.y))
+
+            if lip_distance > current_max_lip_distance:
+                current_max_lip_distance = lip_distance
+                speaking_face = face
+
+        if speaking_face:
+            speaker_history.append(speaking_face)
+
+        frame_counter += 1
+
+        if frame_counter % 10 == 0 and speaker_history:
+            face_counts = Counter([(f.left(), f.top(), f.right(), f.bottom()) for f in speaker_history])
+            most_common_face, count = face_counts.most_common(1)[0]
+
+            if count >= 3:  # consistency percent
+                for f in speaker_history:
+                    if (f.left(), f.top(), f.right(), f.bottom()) == most_common_face:
+                        last_speaker_face = f
+                        break
+
+        if last_speaker_face:
+            (x, y, w, h) = (last_speaker_face.left(), last_speaker_face.top(),
+                            last_speaker_face.width(), last_speaker_face.height())
+            
+            face_center = (x + w // 2, y + h // 2)
+            center_history.append(face_center)
+        else:
+            out.write(frame)
+            continue
+
+        avg_x = int(np.mean([c[0] for c in center_history]))
+        avg_y = int(np.mean([c[1] for c in center_history]))
+        smoothed_center = (avg_x, avg_y)
+
+        crop_x1 = max(0, smoothed_center[0] - output_width // 2)
+        crop_x2 = min(frame_width, smoothed_center[0] + output_width // 2)
+
+        if crop_x2 - crop_x1 < output_width:
+            if crop_x1 == 0:
+                crop_x2 = output_width
+            else:
+                crop_x1 = frame_width - output_width
+
+        crop_y1 = 0
+        crop_y2 = frame_height
+
+        cropped_frame = frame[crop_y1:crop_y2, crop_x1:crop_x2]
+        cropped_frame_resized = cv2.resize(cropped_frame, (output_width, frame_height))
+
+        out.write(cropped_frame_resized)
 
     cap.release()
     out.release()
-    print("✅ Video saved with facial landmarks:", output_path)
-
+    cv2.destroyAllWindows()
+    
+    print("Processing completed!")

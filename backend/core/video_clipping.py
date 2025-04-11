@@ -18,7 +18,7 @@ def generate_video_clips(video_path, audio_path):
         clip_paths = []
         segments = extract_key_segments(audio_path)
         print(f"🎯 Total segments found: {len(segments)}")
-        segments = segments[: min(7, len(segments)-1)]
+        segments = segments[: min(7, len(segments))]
         
         for i, (start, end) in enumerate(segments):
             print(f"Segment {i+1}: Start={start}s, End={end}s, Duration={end - start}s")
@@ -40,7 +40,7 @@ def generate_video_clips(video_path, audio_path):
     return clip_paths
 
 
-def extract_key_segments(audio_path, threshold=.5, duration=30):
+def extract_key_segments(audio_path, threshold=.3, duration=30):
     [fs, x] = audioBasicIO.read_audio_file(audio_path)
     mt, st, mt_names = MidTermFeatures.mid_feature_extraction(x, fs, 
                                                               1 * fs,
