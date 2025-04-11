@@ -8,8 +8,7 @@ from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import MidTermFeatures
 import wave
 import json
-from . import utils
-from . import constants
+from . import utils, constants
 
 
 def generate_video_clips(video_path, audio_path):
@@ -17,7 +16,7 @@ def generate_video_clips(video_path, audio_path):
     
     try:    
         clip_paths = []
-        segments = extract_emotion_segments(audio_path)
+        segments = extract_key_segments(audio_path)
         print(f"🎯 Total segments found: {len(segments)}")
         segments = segments[: min(7, len(segments)-1)]
         
@@ -41,7 +40,7 @@ def generate_video_clips(video_path, audio_path):
     return clip_paths
 
 
-def extract_emotion_segments(audio_path, threshold=.5, duration=30):
+def extract_key_segments(audio_path, threshold=.5, duration=30):
     [fs, x] = audioBasicIO.read_audio_file(audio_path)
     mt, st, mt_names = MidTermFeatures.mid_feature_extraction(x, fs, 
                                                               1 * fs,

@@ -9,6 +9,11 @@ ffmpeg
 vosk
 librosa
 
+opencv-python 
+opencv-python-headless 
+
+tensorflow
+retinaface
 
 pyAudioAnalysis
 matplotlib
