@@ -31,8 +31,6 @@ def generate_video_clips(video_path, audio_path):
         
     finally:
         video.close()
-        utils.delete_file(video_path)
-        utils.delete_file(audio_path)
 
     return clip_paths
 
