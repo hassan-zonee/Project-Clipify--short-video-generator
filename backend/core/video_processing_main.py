@@ -5,14 +5,14 @@ from . import video_clipping, utils, constants, video_reframing
 
 
 def process_video(url):
-    #downloaded_video = download_video(url)
-    #extracted_audio = video_clipping.extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
-    #clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
+    downloaded_video = download_video(url)
+    extracted_audio = video_clipping.extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
+    clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
     #transcription = video_clipping.transcribe_audio(extracted_audio)
         
     input_video_path = constants.generated_clips_path + "/20250410_222205_0a83694f-1096-4696-8dff-e73d311d4ff5.mp4"
     output_video_path = constants.temp_path + "/test.mp4"
-    video_reframing.reframe_video(input_video_path, output_video_path)
+    #video_reframing.reframe_video(input_video_path, output_video_path)
     
 
 

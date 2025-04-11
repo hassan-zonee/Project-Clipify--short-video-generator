@@ -12,8 +12,7 @@ librosa
 opencv-python 
 opencv-python-headless 
 
-tensorflow
-retinaface
+dlib
 
 pyAudioAnalysis
 matplotlib
