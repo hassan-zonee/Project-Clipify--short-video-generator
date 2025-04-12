@@ -18,34 +18,39 @@ def process_video(url):
     utils.delete_file(extracted_audio)
     utils.delete_file(downloaded_video)
     
-    for clip in clips:
-        try:
-            input_video_path = clip
-            output_video_path = utils.generate_unique_filename(constants.generated_clips_path, '.mp4')
-            
-            # reframe video
-            reframed_video = video_reframing.reframe_video(input_video_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
-            
-            # extract audio
-            audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
-            extract_audio(input_video_path, audio_path)
-            
-            # generate subtitles
-            subtitles = utils.create_subtitle_chunks(transcribe_audio(audio_path))
-            
-            #merge audio to reframed video
-            audio_video_merge_path = merge_audio_with_video(reframed_video, audio_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
-            
-            # add subtitles
-            add_subtitles_to_video(audio_video_merge_path, subtitles, output_video_path)
-            
-            utils.delete_file(audio_path)
-            utils.delete_file(audio_video_merge_path)
-            utils.delete_file(reframed_video)
-            utils.delete_file(clip)
-        except Exception as e:
-            return e
+    processed_clips = []
     
+    for clip in clips:
+        input_video_path = clip
+        output_video_path = utils.generate_unique_filename(constants.generated_clips_path, '.mp4')
+        
+        # reframe video
+        reframed_video = video_reframing.reframe_video(input_video_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
+        if(is_valid_video(reframed_video) == False):
+            utils.delete_file(input_video_path)
+            utils.delete_file(reframed_video)
+            continue
+        
+        # extract audio
+        audio_path = utils.generate_unique_filename(constants.temp_path, '.wav')
+        extract_audio(input_video_path, audio_path)
+        
+        # generate subtitles
+        subtitles = utils.create_subtitle_chunks(transcribe_audio(audio_path))
+        
+        #merge audio to reframed video
+        audio_video_merge_path = merge_audio_with_video(reframed_video, audio_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
+        
+        # add subtitles
+        add_subtitles_to_video(audio_video_merge_path, subtitles, output_video_path)
+        processed_clips.append(output_video_path)
+        
+        utils.delete_file(audio_path)
+        utils.delete_file(audio_video_merge_path)
+        utils.delete_file(reframed_video)
+        utils.delete_file(clip)
+        
+    return processed_clips
     
     
 
@@ -140,3 +145,16 @@ def add_subtitles_to_video(video_path, subtitles, output_path):
 
     final = CompositeVideoClip(clips)
     final.write_videofile(output_path, codec='libx264', audio_codec='aac')
+    
+    video.close()
+    
+    
+def is_valid_video(path):
+    try:
+        clip = VideoFileClip(path)
+        duration = clip.duration
+        clip.close()
+        return duration is not None and duration > 0
+    except Exception as e:
+        print(f"[ERROR] Invalid video file: {e}")
+        return False

@@ -15,7 +15,8 @@ def generate_video_clips(video_path, audio_path):
         clip_paths = []
         segments = extract_key_segments(audio_path)
         print(f"🎯 Total segments found: {len(segments)}")
-        segments = segments[: min(20, len(segments))]
+        random.shuffle(segments)
+        segments = segments[: min(30, len(segments))]
         
         for i, (start, end) in enumerate(segments):
             print(f"Segment {i+1}: Start={start}s, End={end}s, Duration={end - start}s")
@@ -65,7 +66,7 @@ def extract_key_segments(audio_path, threshold=.3, duration=30):
             merged.append((start, end))
     
     # Convert to seconds and filter out segments shorter than 10 seconds
-    segments = [(s, e) for s, e in merged if (e - s) >= 10]
+    segments = [(s, e) for s, e in merged if (e - s) >= 15]
     
     # Convert the frame-based start/end to actual time in seconds
     time_segments = [(s * 1.0, e * 1.0) for s, e in segments]  # assuming 1 frame = 1 second
