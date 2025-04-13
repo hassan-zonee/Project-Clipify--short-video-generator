@@ -13,10 +13,3 @@ opencv-python
 opencv-python-headless 
 
 dlib
-
-transformers
-
-pyAudioAnalysis
-matplotlib
-eyed3
-pydub

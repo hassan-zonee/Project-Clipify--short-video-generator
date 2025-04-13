@@ -35,7 +35,7 @@ def generate_video_clips(video_path, audio_path, clips_directory):
     return clip_paths
     
 
-def parse_sentences(results, min_segment_duration = 10):
+def parse_sentences(results, min_segment_duration = 8):
     segments = []
 
     for res in results:
