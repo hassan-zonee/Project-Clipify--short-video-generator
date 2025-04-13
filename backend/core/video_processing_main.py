@@ -106,13 +106,13 @@ def add_subtitles_to_video(video_path, subtitles, output_path):
         
         color = 'white'
         random_number = random.randint(0, 20)
-        if(random_number >= 15):
+        if(random_number >= 17):
             color = 'yellow'
-        elif(random_number >= 10):
-            color = 'green'
+        elif(random_number >= 14):
+            color = 'lightgreen'
         
         txt_clip = (
-            TextClip(text=text, font_size=15, color=color, font='././FunnelSans-Bold.ttf', margin=(None, 20))
+            TextClip(text=text, font_size=15, color=color, font='././PoetsenOne-Regular.ttf', margin=(None, 20))
             .with_position(("center", 0.7), relative=True)
             .with_start(sub['start'])
             .with_duration(sub['end'] - sub['start'])
