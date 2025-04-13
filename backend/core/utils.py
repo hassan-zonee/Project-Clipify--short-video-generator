@@ -2,6 +2,10 @@ import os
 import uuid
 from datetime import datetime
 import random
+import wave
+from vosk import Model, KaldiRecognizer
+import json
+
 
 def delete_file(file_path: str):
     if os.path.exists(file_path):
@@ -51,3 +55,33 @@ def create_subtitle_chunks(vosk_results, words=3, max_duration=4.0):
             "text": text
         })
     return subtitles
+
+
+
+def transcribe_audio(audio_path, model_path="././vosk-model-small-en-us-0.15"):
+    wf = wave.open(audio_path, "rb")
+    
+    if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getframerate() != 16000:
+        raise ValueError("Audio must be WAV format: mono, 16-bit, 16kHz")
+
+    # Load model
+    model = Model(model_path)
+    recognizer = KaldiRecognizer(model, wf.getframerate())
+    recognizer.SetWords(True)
+
+    results = []
+
+    while True:
+        data = wf.readframes(4000)
+        if len(data) == 0:
+            break
+        if recognizer.AcceptWaveform(data):
+            result = json.loads(recognizer.Result())
+            results.append(result)
+
+    final_result = json.loads(recognizer.FinalResult())
+    results.append(final_result)
+    
+    wf.close()
+    
+    return results

@@ -1,19 +1,16 @@
 import yt_dlp
 from moviepy import VideoFileClip, AudioFileClip, TextClip, CompositeVideoClip
-import time
-from . import video_clipping, utils, constants, video_reframing
+import random
+from . import utils, constants, video_reframing, video_clipping_nlp_based
 import librosa
 import soundfile as sf
-import wave
-import json
-from vosk import Model, KaldiRecognizer
 import string as str
 
 
 def process_video(url):
     downloaded_video = download_video(url)
     extracted_audio = extract_audio(downloaded_video, utils.generate_unique_filename(constants.temp_path, '.wav'))
-    clips = video_clipping.generate_video_clips(downloaded_video, extracted_audio)
+    clips = video_clipping_nlp_based.generate_video_clips(downloaded_video, extracted_audio, constants.temp_path)
     
     utils.delete_file(extracted_audio)
     utils.delete_file(downloaded_video)
@@ -36,7 +33,7 @@ def process_video(url):
         extract_audio(input_video_path, audio_path)
         
         # generate subtitles
-        subtitles = utils.create_subtitle_chunks(transcribe_audio(audio_path))
+        subtitles = utils.create_subtitle_chunks(utils.transcribe_audio(audio_path))
         
         #merge audio to reframed video
         audio_video_merge_path = merge_audio_with_video(reframed_video, audio_path, utils.generate_unique_filename(constants.temp_path, '.mp4'))
@@ -51,7 +48,6 @@ def process_video(url):
         utils.delete_file(clip)
         
     return processed_clips
-    
     
 
 def download_video(url: str):
@@ -100,34 +96,6 @@ def extract_audio(video_path, output_audio_path):
 
 
 
-def transcribe_audio(audio_path, model_path="././vosk-model-small-en-us-0.15"):
-    wf = wave.open(audio_path, "rb")
-    
-    if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getframerate() != 16000:
-        raise ValueError("Audio must be WAV format: mono, 16-bit, 16kHz")
-
-    # Load model
-    model = Model(model_path)
-    recognizer = KaldiRecognizer(model, wf.getframerate())
-    recognizer.SetWords(True)
-
-    results = []
-
-    while True:
-        data = wf.readframes(4000)
-        if len(data) == 0:
-            break
-        if recognizer.AcceptWaveform(data):
-            result = json.loads(recognizer.Result())
-            results.append(result)
-
-    final_result = json.loads(recognizer.FinalResult())
-    results.append(final_result)
-    
-    wf.close()
-    
-    return results
-
 
 def add_subtitles_to_video(video_path, subtitles, output_path):
     video = VideoFileClip(video_path)
@@ -135,8 +103,16 @@ def add_subtitles_to_video(video_path, subtitles, output_path):
 
     for sub in subtitles:
         text = sub['text'].upper()
+        
+        color = 'white'
+        random_number = random.randint(0, 20)
+        if(random_number >= 15):
+            color = 'yellow'
+        elif(random_number >= 10):
+            color = 'green'
+        
         txt_clip = (
-            TextClip(text=text, font_size=15, color='yellow', font='././FunnelSans-Bold.ttf', margin=(None, 20))
+            TextClip(text=text, font_size=15, color=color, font='././FunnelSans-Bold.ttf', margin=(None, 20))
             .with_position(("center", 0.7), relative=True)
             .with_start(sub['start'])
             .with_duration(sub['end'] - sub['start'])
